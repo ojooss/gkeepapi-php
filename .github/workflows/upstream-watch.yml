@@ -1,0 +1,38 @@
+name: Upstream watch
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with upstream
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          tools/upstream-check.sh > upstream-report.md
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -eq 0 ] || [ "$code" -eq 10 ]
+      - name: Open or update the tracking issue
+        if: steps.check.outputs.code == '10'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create upstream-changes --description "Upstream gkeepapi/gpsoauth changed" --color FBCA04 || true
+          existing="$(gh issue list --label upstream-changes --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file upstream-report.md
+          else
+            gh issue create --title "Upstream changes to port" --label upstream-changes --body-file upstream-report.md
+          fi

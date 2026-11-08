@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="gkeepapi-php">
+    <description>PSR-12 coding standard</description>
+    <arg name="cache" value=".phpcs.cache"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <file>src</file>
+    <file>tests</file>
+    <file>tools</file>
+    <file>rector.php</file>
+    <rule ref="PSR12"/>
+</ruleset>
